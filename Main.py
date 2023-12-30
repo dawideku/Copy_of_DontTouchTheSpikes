@@ -11,6 +11,22 @@ timer = pygame.time.Clock()
 wall_thickness = 10
 gravity = 0.7
 bounce_stop = 0.3
+lspikes = []
+rspikes = []
+
+
+class Spike:
+    def __init__(self, a, b, c, color):
+        self.a_coord = a
+        self.b_coord = b
+        self.c_coord = c
+        self.color = color
+
+
+for i in range(0,10):
+    lspikes.append(Spike((wall_thickness,10+i*70),(wall_thickness,80+i*70),(wall_thickness+45,40+i*70),'yellow'))
+for j in range(0,10):
+    rspikes.append(Spike((WIDTH,10+j*70),(WIDTH,80+j*70),(WIDTH-45,40+j*70),'yellow'))
 
 
 class Bird:
@@ -71,7 +87,10 @@ while run:
     screen.fill('black')
     walls = draw_walls()
     player.move()
-
+    for spike in lspikes:
+        pygame.draw.polygon(screen,spike.color,(spike.a_coord,spike.b_coord,spike.c_coord))
+    for spike in rspikes:
+        pygame.draw.polygon(screen, spike.color, (spike.a_coord, spike.b_coord, spike.c_coord))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
