@@ -1,9 +1,10 @@
+import os
 import pygame
 
 pygame.init()
 
 WIDTH = 1000
-HEIGHT = 800
+HEIGHT = 1000
 screen = pygame.display.set_mode([WIDTH,HEIGHT])
 fps = 60
 timer = pygame.time.Clock()
@@ -13,37 +14,43 @@ gravity = 0.7
 bounce_stop = 0.3
 lspikes = []
 rspikes = []
+folder_path = os.path.join(os.path.dirname(__file__),'graphics')
+spike1 = pygame.image.load(os.path.join(folder_path,'left_spike.png'))
+spike2 = pygame.image.load(os.path.join(folder_path,'right_spike.png'))
+bird1 = pygame.image.load(os.path.join(folder_path,'bird_left.png'))
+bird2 = pygame.image.load(os.path.join(folder_path,'bird_right.png'))
+bird_models = [bird1,bird2]
 
 
 class Spike:
-    def __init__(self, a, b, c, color):
-        self.a_coord = a
-        self.b_coord = b
-        self.c_coord = c
-        self.color = color
+    def __init__(self, x, y, model):
+        self.x_coord = x
+        self.y_coord = y
+        self.model = model
 
 
 for i in range(0,10):
-    lspikes.append(Spike((wall_thickness,10+i*70),(wall_thickness,80+i*70),(wall_thickness+45,40+i*70),'yellow'))
+    lspikes.append(Spike(wall_thickness, wall_thickness + i * 96, spike1))
 for j in range(0,10):
-    rspikes.append(Spike((WIDTH,10+j*70),(WIDTH,80+j*70),(WIDTH-45,40+j*70),'yellow'))
+    rspikes.append(Spike(WIDTH-wall_thickness-96, wall_thickness + j * 96, spike2))
 
 
 class Bird:
-    def __init__(self, x_pos, y_pos, color, x_speed, y_speed):
+    def __init__(self, x_pos, y_pos, x_speed, y_speed, models):
         self.x_pos = x_pos
         self.y_pos = y_pos
-        self.radius = 30
-        self.color = color
         self.x_speed = x_speed
         self.y_speed = y_speed
-        self.circle = ''
+        self.models = models
 
     def draw(self):
-        self.circle = pygame.draw.circle(screen, self.color, (self.x_pos, self.y_pos), self.radius)
+        if self.x_speed > 0:
+            screen.blit(self.models[1],(self.x_pos, self.y_pos))
+        else:
+            screen.blit(self.models[0],(self.x_pos, self.y_pos))
 
     def check_gravity(self):
-        if self.y_pos < HEIGHT - self.radius - (wall_thickness/2):
+        if self.y_pos < HEIGHT - 68 - (wall_thickness/2):
             self.y_speed += gravity
         else:
             if self.y_speed > bounce_stop:
@@ -54,9 +61,9 @@ class Bird:
         return self.y_speed
 
     def check_xpos(self):
-        if self.x_pos < 0 + self.radius + (wall_thickness/2):
+        if self.x_pos < 0 + (wall_thickness/2):
             self.x_speed = self.x_speed * -1
-        if self.x_pos > WIDTH - self.radius - (wall_thickness/2):
+        if self.x_pos > WIDTH - 80 - (wall_thickness/2):
             self.x_speed = self.x_speed * -1
 
     def update_pos(self):
@@ -70,7 +77,7 @@ class Bird:
         self.check_xpos()
 
 
-player = Bird(300, 300, 'green', 10, 0)
+player = Bird(300, 300, 10, 0, bird_models)
 
 def draw_walls():
     left = pygame.draw.line(screen, 'white', (0, 0), (0, HEIGHT), wall_thickness)
@@ -88,9 +95,9 @@ while run:
     walls = draw_walls()
     player.move()
     for spike in lspikes:
-        pygame.draw.polygon(screen,spike.color,(spike.a_coord,spike.b_coord,spike.c_coord))
+        screen.blit(spike.model, (spike.x_coord, spike.y_coord))
     for spike in rspikes:
-        pygame.draw.polygon(screen, spike.color, (spike.a_coord, spike.b_coord, spike.c_coord))
+        screen.blit(spike.model, (spike.x_coord, spike.y_coord))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
