@@ -9,6 +9,7 @@ screen = pygame.display.set_mode([WIDTH,HEIGHT])
 fps = 60
 timer = pygame.time.Clock()
 
+collision = False
 wall_thickness = 10
 gravity = 0.7
 bounce_stop = 0.3
@@ -19,20 +20,25 @@ spike1 = pygame.image.load(os.path.join(folder_path,'left_spike.png'))
 spike2 = pygame.image.load(os.path.join(folder_path,'right_spike.png'))
 bird1 = pygame.image.load(os.path.join(folder_path,'bird_left.png'))
 bird2 = pygame.image.load(os.path.join(folder_path,'bird_right.png'))
+background = pygame.image.load(os.path.join(folder_path, 'background.png'))
 bird_models = [bird1,bird2]
 
 
 class Spike:
-    def __init__(self, x, y, model):
+    def __init__(self, x, y, model, speed):
         self.x_coord = x
         self.y_coord = y
         self.model = model
+        self.speed = speed
+
+    def move_spike(self):
+        self.x_coord += self.speed
 
 
-for i in range(0,10):
-    lspikes.append(Spike(wall_thickness, wall_thickness + i * 96, spike1))
-for j in range(0,10):
-    rspikes.append(Spike(WIDTH-wall_thickness-96, wall_thickness + j * 96, spike2))
+for i in range(0, 8):
+    lspikes.append(Spike(wall_thickness - 2 - 100, wall_thickness + i * 116, spike1, 4))
+for j in range(0, 8):
+    rspikes.append(Spike(WIDTH-wall_thickness-92, wall_thickness + j * 116, spike2, 4))
 
 
 class Bird:
@@ -50,7 +56,7 @@ class Bird:
             screen.blit(self.models[0],(self.x_pos, self.y_pos))
 
     def check_gravity(self):
-        if self.y_pos < HEIGHT - 68 - (wall_thickness/2):
+        if self.y_pos < HEIGHT - 77 - (wall_thickness/2):
             self.y_speed += gravity
         else:
             if self.y_speed > bounce_stop:
@@ -61,10 +67,24 @@ class Bird:
         return self.y_speed
 
     def check_xpos(self):
-        if self.x_pos < 0 + (wall_thickness/2):
+        global move_counter
+        global facing_left
+        if self.x_pos < 0 + wall_thickness:
             self.x_speed = self.x_speed * -1
-        if self.x_pos > WIDTH - 80 - (wall_thickness/2):
+            for spike in lspikes:
+                spike.speed *= -1
+            for spike in rspikes:
+                spike.speed *= -1
+            move_counter = 0
+            facing_left = True
+        if self.x_pos > WIDTH - 80 - wall_thickness:
             self.x_speed = self.x_speed * -1
+            for spike in rspikes:
+                spike.speed *= -1
+            for spike in lspikes:
+                spike.speed *= -1
+            move_counter = 0
+            facing_left = False
 
     def update_pos(self):
         self.y_pos += self.y_speed
@@ -87,22 +107,33 @@ def draw_walls():
     wall_list = [left,right,top,bottom]
     return wall_list
 
+move_counter = 0
+facing_left = False
 
 run = True
 while run:
     timer.tick(fps)
     screen.fill('black')
-    walls = draw_walls()
+    screen.blit(background, (0, 0))
     player.move()
     for spike in lspikes:
+        if move_counter<464:
+            if move_counter > 60:
+                spike.move_spike()
+            move_counter+=1
         screen.blit(spike.model, (spike.x_coord, spike.y_coord))
     for spike in rspikes:
+        if move_counter<464:
+            if move_counter > 60:
+                spike.move_spike()
+            move_counter+=1
         screen.blit(spike.model, (spike.x_coord, spike.y_coord))
+    draw_walls()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-
-    if pygame.key.get_pressed()[pygame.K_SPACE]:
-        player.y_speed = -10
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.y_speed = -13
     pygame.display.flip()
 pygame.quit()
